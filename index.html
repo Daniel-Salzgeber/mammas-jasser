@@ -568,10 +568,11 @@ function startRound(){
   setTimeout(()=>beginBidding(state.chooser), 700);
 }
 
-function sortHand(hand){
+function sortHand(hand, trumpSuit){
   hand.sort((a,b)=>{
     if(a.suit!==b.suit) return SUITS.indexOf(a.suit)-SUITS.indexOf(b.suit);
-    return ORDER_NORMAL.indexOf(a.rank)-ORDER_NORMAL.indexOf(b.rank);
+    const order = a.suit===trumpSuit ? ORDER_TRUMP : ORDER_NORMAL;
+    return order.indexOf(a.rank)-order.indexOf(b.rank);
   });
 }
 
@@ -644,6 +645,7 @@ function aiChooseTrump(seat){
 function finalizeTrump(seat, choice){
   state.chooser = seat;
   state.trump = "suit"; state.trumpSuit = choice;
+  for(const s of SEATS) sortHand(state.hands[s], state.trumpSuit);
   setTrumpLabel(trumpDisplay());
   showBanner(seatLabel(seat)+" spielt "+trumpDisplay());
   state.trickLeader = seat;
