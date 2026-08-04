@@ -799,9 +799,9 @@ function aiPickCard(seat, legal){
   });
 
   if(trickCount===0){
-    // lead: play a middling non-trump card, or trump if very strong hand
-    const nonTrump = legal.filter(c=>!isTrumpCard(c));
-    const pool = nonTrump.length? nonTrump : legal;
+    // lead: prefer starting with trump (drawing out opponents' trumps), weakest trump first
+    const trumpCards = legal.filter(c=>isTrumpCard(c));
+    const pool = trumpCards.length? trumpCards : legal;
     pool.sort((a,b)=>cardPoints(a)-cardPoints(b));
     return pool[0];
   }
