@@ -452,7 +452,8 @@
         <h3>Karten ausspielen</h3>
         <ul>
           <li>Du musst die angespielte Farbe bedienen, wenn du eine Karte davon hast.</li>
-          <li>Hast du keine Karte dieser Farbe, darfst du eine beliebige Karte spielen, auch Trumpf.</li>
+          <li>Hast du keine Karte dieser Farbe, darfst du eine beliebige Karte spielen.</li>
+          <li>Trumpfkarten darfst du immer spielen, auch wenn du die angespielte Farbe bedienen könntest.</li>
           <li>Deine spielbaren Karten sind leicht angehoben und golden umrandet.</li>
         </ul>
         <h3>Reihenfolge der Karten</h3>
@@ -518,7 +519,7 @@ function shuffle(arr){
 /* ============== Game state ============== */
 const SEATS = ["south","west","north","east"]; // south=human, north=partner
 const TEAM = { south:"us", north:"us", west:"them", east:"them" };
-const NEXT = { south:"west", west:"north", north:"east", east:"south" };
+const NEXT = { south:"east", east:"north", north:"west", west:"south" };
 
 let state = null;
 
@@ -685,7 +686,14 @@ function legalCards(seat){
   if(Object.keys(state.trick).length===0) return hand.slice(); // leading, anything goes
   const lead = state.leadSuit;
   const haveLead = hand.filter(c=>c.suit===lead);
-  if(haveLead.length>0) return haveLead;
+  if(haveLead.length>0){
+    // trump cards may always be played, even when the lead suit could be served
+    if(state.trump==="suit" && lead!==state.trumpSuit){
+      const trumpExtra = hand.filter(c=>c.suit===state.trumpSuit);
+      if(trumpExtra.length>0) return haveLead.concat(trumpExtra);
+    }
+    return haveLead;
+  }
   return hand.slice();
 }
 
