@@ -1,0 +1,952 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Mammas Jasser</title>
+<style>
+  :root{
+    --felt-1:#1e4a37;
+    --felt-2:#123425;
+    --felt-edge:#0d2419;
+    --wood-1:#8a5a34;
+    --wood-2:#5c3a1e;
+    --wood-3:#3c2611;
+    --card:#f7f0dc;
+    --card-edge:#d9caa0;
+    --ink:#241b12;
+    --ink-soft:#5a4a35;
+    --brass:#d4af52;
+    --brass-dim:#a9843a;
+    --cloth-line:rgba(255,255,255,0.05);
+    --suit-black:#1c1712;
+    --suit-red:#a3172c;
+    --good:#3f7d4a;
+    --bad:#a63d3d;
+    --legal-glow:#ffe9a8;
+  }
+  *{box-sizing:border-box;}
+  svg{ fill:currentColor; }
+  html,body{
+    margin:0;padding:0;height:100%;
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    overflow:hidden;
+    overscroll-behavior:none;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-touch-callout:none;
+    user-select:none;
+  }
+  body{
+    background:
+      radial-gradient(ellipse at 50% 35%, var(--felt-1) 0%, var(--felt-2) 70%, var(--felt-edge) 100%);
+    height:100vh;
+    height:100dvh;
+    width:100vw;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #table{
+    position:relative;
+    width:100%;
+    height:100%;
+    max-width:1100px;
+    max-height:900px;
+    border:18px solid var(--wood-2);
+    border-image: linear-gradient(160deg, var(--wood-1), var(--wood-3) 60%, var(--wood-2)) 1;
+    border-radius:28px;
+    box-shadow:
+      inset 0 0 0 3px rgba(0,0,0,0.25),
+      inset 0 0 60px rgba(0,0,0,0.45),
+      0 20px 50px rgba(0,0,0,0.5);
+    background:
+      repeating-radial-gradient(circle at 50% 50%, var(--cloth-line) 0 2px, transparent 2px 4px),
+      radial-gradient(ellipse at 50% 40%, var(--felt-1) 0%, var(--felt-2) 75%, var(--felt-edge) 100%);
+  }
+
+  /* ---------- Top bar: score + trump ---------- */
+  #topbar{
+    position:absolute; top:14px; left:14px; right:14px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:10px;
+    z-index:20;
+  }
+  #topbar-right{
+    display:flex; align-items:flex-start; gap:10px;
+  }
+  .plaque{
+    background:linear-gradient(180deg,#2a1c10,#170f08);
+    border:2px solid var(--brass-dim);
+    border-radius:10px;
+    padding:8px 14px;
+    color:#f1e6c8;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  #scoreboard{ font-variant-numeric:tabular-nums; }
+  #scoreboard .title{
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:700; letter-spacing:.04em; font-size:13px;
+    color:var(--brass); text-transform:uppercase; margin-bottom:2px;
+  }
+  #scoreboard .rows{ display:flex; gap:18px; font-size:22px; font-weight:700; }
+  #scoreboard .rows div span.lbl{ font-size:12px; font-weight:600; color:#cbb98a; display:block; text-transform:uppercase; letter-spacing:.03em;}
+  #trumpbox{
+    display:flex; align-items:center; gap:10px;
+    font-family:Georgia,"Times New Roman",serif; font-weight:700;
+  }
+  #trumpbox .lbl{ font-size:12px; color:#cbb98a; text-transform:uppercase; letter-spacing:.04em; display:block;}
+  #trumpbox .val{ font-size:20px; color:#f1e6c8; display:flex; align-items:center; gap:6px;}
+  #trumpbox svg{ width:24px; height:24px; }
+  #helpbtn{
+    background:linear-gradient(180deg,#2a1c10,#170f08);
+    border:2px solid var(--brass-dim); color:#f1e6c8;
+    border-radius:50%; width:46px; height:46px; font-size:20px; font-weight:700;
+    font-family:Georgia,serif; cursor:pointer; flex-shrink:0;
+  }
+  #helpbtn:focus-visible, button:focus-visible{ outline:3px solid #fff; outline-offset:2px; }
+
+  /* ---------- Wordmark ---------- */
+  #wordmark{
+    position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:700; font-size:15px; letter-spacing:.14em;
+    color:var(--brass); text-transform:uppercase;
+    text-shadow:0 1px 0 rgba(0,0,0,0.5);
+    opacity:.85; pointer-events:none; z-index:5;
+  }
+
+  /* ---------- Seats ---------- */
+  .seat-label{
+    position:absolute; font-size:13px; font-weight:700; color:#cfe8d8;
+    background:rgba(0,0,0,0.28); padding:3px 10px; border-radius:20px;
+    letter-spacing:.03em; z-index:15; white-space:nowrap;
+  }
+  .seat-label.active{ background:var(--brass); color:#2a1c10; box-shadow:0 0 14px var(--brass); }
+  #label-north{ top:96px; left:50%; transform:translateX(-50%); }
+  #label-west{ top:50%; left:70px; transform:translateY(-50%); }
+  #label-east{ top:50%; right:70px; transform:translateY(-50%); }
+  #label-south{ bottom:235px; left:50%; transform:translateX(-50%); }
+
+  .hand-back{ position:absolute; display:flex; z-index:10; }
+  .mini-card{
+    width:34px; height:48px; border-radius:5px;
+    background:repeating-linear-gradient(135deg, #7a1f2b 0 6px, #611722 6px 12px);
+    border:2px solid #f1e6c8; box-shadow:0 2px 4px rgba(0,0,0,0.4);
+  }
+  #hand-north{ top:60px; left:50%; transform:translateX(-50%); }
+  #hand-north .mini-card{ margin-left:-16px; }
+  #hand-north .mini-card:first-child{ margin-left:0; }
+  #hand-west{ top:50%; left:24px; transform:translateY(-50%); flex-direction:column; }
+  #hand-west .mini-card{ margin-top:-30px; }
+  #hand-west .mini-card:first-child{ margin-top:0; }
+  #hand-east{ top:50%; right:24px; transform:translateY(-50%); flex-direction:column; }
+  #hand-east .mini-card{ margin-top:-30px; }
+  #hand-east .mini-card:first-child{ margin-top:0; }
+
+  /* ---------- Trick area ---------- */
+  #trick{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:300px; height:260px; z-index:12;
+  }
+  .trick-slot{
+    position:absolute; width:96px; height:135px;
+  }
+  #trick-north{ top:0; left:50%; margin-left:-48px; }
+  #trick-south{ bottom:0; left:50%; margin-left:-48px; }
+  #trick-west{ left:0; top:50%; margin-top:-68px; }
+  #trick-east{ right:0; top:50%; margin-top:-68px; }
+
+  /* ---------- Playing cards ---------- */
+  .card{
+    width:96px; height:135px; border-radius:9px;
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 60%),
+      var(--card);
+    border:1.5px solid var(--card-edge);
+    box-shadow:0 3px 6px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.5);
+    position:relative;
+    font-family:Georgia,"Times New Roman",serif;
+    overflow:hidden;
+  }
+  .card.black{ color:var(--suit-black); }
+  .card.red{ color:var(--suit-red); }
+  .card.art{ background:#fff; padding:0; }
+  .card.art img{ width:100%; height:100%; display:block; object-fit:fill; -webkit-user-drag:none; pointer-events:none; -webkit-touch-callout:none; }
+  .card .corner{ position:absolute; display:flex; flex-direction:column; align-items:center; line-height:1; }
+  .card .corner.top{ top:6px; left:8px; }
+  .card .corner.bottom{ bottom:6px; right:8px; transform:rotate(180deg); }
+  .card .corner .rank{ font-size:19px; font-weight:700; }
+  .card .corner .pip{ width:13px; height:13px; margin-top:1px; }
+  .card .corner .pip svg{ width:100%; height:100%; fill:currentColor; display:block; }
+  .card .center-icon{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:42px; height:42px; opacity:.92;
+  }
+  .card .center-icon svg{ width:100%; height:100%; fill:currentColor; display:block; }
+  .card .center-icon.big{ width:44px; height:44px; }
+  .card .center-icon.court{ width:50px; height:50px; opacity:1; }
+  .card.black .center-icon{ filter:drop-shadow(0 1px 0 rgba(0,0,0,0.08)); }
+  .card .pips{ position:absolute; inset:0; }
+  .card .pip-icon{ position:absolute; width:17px; height:17px; transform:translate(-50%,-50%); }
+  .card .pip-icon svg{ width:100%; height:100%; fill:currentColor; display:block; }
+
+  /* ---------- South hand (human, interactive) ---------- */
+  #hand-south{
+    position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    display:flex; z-index:30; height:195px; align-items:flex-end;
+  }
+  #hand-south.raised{ z-index:110; }
+  .pcard{
+    width:120px; height:170px; margin-left:-50px;
+    cursor:pointer;
+    transition:transform .15s ease, margin-top .15s ease, filter .15s ease, box-shadow .15s ease;
+    border-radius:12px;
+  }
+  .pcard:first-child{ margin-left:0; }
+  .pcard .card{ width:120px; height:170px; }
+  .pcard .card .rank{ font-size:26px; }
+  .pcard .card .center-icon{ width:50px; height:50px; }
+  .pcard .card .center-icon.big{ width:60px; height:60px; }
+  .pcard .card .center-icon.court{ width:66px; height:66px; }
+  .pcard .card .pip-icon{ width:22px; height:22px; }
+  .pcard.legal:hover, .pcard.legal:focus-visible{ transform:translateY(-18px); z-index:50; }
+  .pcard.legal{ box-shadow:0 0 0 3px var(--legal-glow), 0 6px 14px rgba(0,0,0,0.4); border-radius:10px; }
+  .pcard.illegal{ filter:brightness(.6) saturate(.7); cursor:default; }
+  .pcard.illegal .card{ box-shadow:0 2px 5px rgba(0,0,0,0.3); }
+
+  /* ---------- Trump chip ---------- */
+  #trumpchip{
+    position:absolute; z-index:14; width:58px; height:58px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #f1e6c8, var(--brass) 60%, var(--brass-dim));
+    border:2px solid #7a5a1e;
+    box-shadow:0 4px 8px rgba(0,0,0,0.5);
+    display:none; align-items:center; justify-content:center;
+    top:50%; left:50%; margin-top:-156px; margin-left:-143px;
+  }
+  #trumpchip svg{ width:32px; height:32px; }
+  #trumpchip.showing{ display:flex; }
+
+  /* ---------- Overlays / modals ---------- */
+  .overlay{
+    position:absolute; inset:0; background:rgba(8,14,10,0.72);
+    display:none; align-items:center; justify-content:center; z-index:100;
+    padding:20px;
+  }
+  .overlay.show{ display:flex; }
+  #bid-overlay{ align-items:flex-start; bottom:219px; padding-top:50px; }
+  .modal{
+    background:linear-gradient(180deg,#fbf6e6,#f2e8cf);
+    border-radius:18px; padding:26px 28px; max-width:560px; width:100%;
+    box-shadow:0 20px 50px rgba(0,0,0,0.5);
+    border:1px solid #d9caa0;
+    max-height:90%; overflow-y:auto;
+  }
+  .modal h2{
+    font-family:Georgia,serif; margin:0 0 6px; font-size:26px; color:var(--ink);
+    text-wrap:balance;
+  }
+  .modal p{ margin:0 0 16px; font-size:17px; line-height:1.5; color:var(--ink-soft); }
+  .choice-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .choice-btn{
+    display:flex; align-items:center; gap:12px;
+    background:#fff; border:2px solid #d9caa0; border-radius:12px;
+    padding:14px 16px; font-size:19px; font-weight:700; color:var(--ink);
+    cursor:pointer; font-family:-apple-system,"Segoe UI",sans-serif;
+    transition:transform .1s ease, background .15s ease, border-color .15s ease;
+  }
+  .choice-btn:hover, .choice-btn:focus-visible{ background:#fff8e6; border-color:var(--brass); transform:translateY(-2px); }
+  .choice-btn svg{ width:30px; height:30px; flex-shrink:0; }
+  .choice-btn.wide{ grid-column:1 / -1; justify-content:center; background:#f3ead0; }
+  .bigbtn{
+    display:block; width:100%; margin-top:18px;
+    background:linear-gradient(180deg,#2a6b47,#1d4d33);
+    color:#fbf6e6; border:none; border-radius:12px; padding:16px;
+    font-size:19px; font-weight:700; cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+  }
+  .bigbtn:hover, .bigbtn:focus-visible{ filter:brightness(1.08); }
+  .bigbtn.secondary{ background:linear-gradient(180deg,#7a6a45,#5c4e30); }
+
+  #banner{
+    position:absolute; top:64px; left:50%; transform:translateX(-50%);
+    background:rgba(20,14,8,0.85); color:#f1e6c8;
+    padding:10px 22px; border-radius:30px; font-size:18px; font-weight:700;
+    z-index:60; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.4);
+    max-width:80%; text-wrap:balance;
+    opacity:0; transition:opacity .3s ease;
+    pointer-events:none;
+  }
+  #banner.show{ opacity:1; }
+
+  .rules-body h3{ font-family:Georgia,serif; font-size:18px; margin:16px 0 4px; color:var(--ink); }
+  .rules-body p, .rules-body li{ font-size:16px; line-height:1.5; color:var(--ink-soft); }
+  .rules-body ul{ padding-left:20px; margin:6px 0; }
+
+  @media (max-width: 640px){
+    #table{ border-width:10px; border-radius:0; max-width:100vw; max-height:100vh; }
+    body{ height:100dvh; }
+    #bid-overlay{ bottom:178px; padding-top:16px; }
+    .plaque{ padding:5px 8px; }
+    #scoreboard .title{ font-size:10px; }
+    #scoreboard .rows{ font-size:15px; gap:8px; }
+    #topbar-right{ gap:6px; }
+    #trumpbox .lbl{ font-size:10px; }
+    #trumpbox .val{ font-size:15px; gap:4px; }
+    #trumpbox svg{ width:16px; height:16px; }
+    #helpbtn{ width:38px; height:38px; font-size:16px; }
+    #wordmark{ font-size:10px; top:76px; }
+    #hand-north{ top:92px; }
+    #label-north{ top:130px; }
+    #label-south{ bottom:196px; }
+    #hand-south{ bottom:8px; height:160px; }
+    .card, .trick-slot{ width:84px; height:118px; }
+    .card .corner .rank{ font-size:17px; }
+    .card .center-icon{ width:36px; height:36px; }
+    .card .center-icon.big{ width:38px; height:38px; }
+    .card .center-icon.court{ width:42px; height:42px; }
+    #trick{ width:260px; height:228px; }
+    #trick-north, #trick-south{ margin-left:-42px; }
+    #trick-west, #trick-east{ margin-top:-59px; }
+    .pcard{ width:96px; height:136px; margin-left:-55px; }
+    .pcard .card{ width:96px; height:136px; }
+    .pcard .card .rank{ font-size:18px; }
+    .pcard .card .center-icon{ width:40px; height:40px; }
+    .pcard .card .center-icon.big{ width:46px; height:46px; }
+    .pcard .card .center-icon.court{ width:52px; height:52px; }
+    .pcard .card .pip-icon{ width:17px; height:17px; }
+    .modal{ padding:18px 18px; }
+    #bid-overlay .modal{ padding:14px; }
+    #bid-overlay .modal h2{ font-size:18px; margin-bottom:3px; }
+    #bid-overlay .modal p{ font-size:13px; margin-bottom:10px; }
+    #bid-overlay .choice-grid{ gap:8px; }
+    #bid-overlay .choice-btn{ padding:9px 10px; font-size:14px; gap:8px; }
+    #bid-overlay .choice-btn svg{ width:20px; height:20px; }
+    #trumpchip{ margin-top:-125px; margin-left:-114px; width:48px; height:48px; }
+  }
+</style>
+
+<div id="table">
+  <div id="wordmark">Mammas Jasser</div>
+
+  <div id="topbar">
+    <div class="plaque" id="scoreboard">
+      <div class="title">Punktestand</div>
+      <div class="rows">
+        <div><span class="lbl">Wir</span><span id="score-us">0</span></div>
+        <div><span class="lbl">Sie</span><span id="score-them">0</span></div>
+      </div>
+    </div>
+    <div id="topbar-right">
+      <div class="plaque" id="trumpbox">
+        <div>
+          <span class="lbl">Trumpf</span>
+          <span class="val" id="trump-val">–</span>
+        </div>
+      </div>
+      <button id="helpbtn" aria-label="Anleitung anzeigen" title="Anleitung">?</button>
+    </div>
+  </div>
+
+  <div id="banner"></div>
+
+  <div id="label-north" class="seat-label">Brigitte</div>
+  <div id="label-west" class="seat-label">Patricia</div>
+  <div id="label-east" class="seat-label">Bernhard</div>
+  <div id="label-south" class="seat-label">Du</div>
+
+  <div id="hand-north" class="hand-back"></div>
+  <div id="hand-west" class="hand-back"></div>
+  <div id="hand-east" class="hand-back"></div>
+
+  <div id="trumpchip"></div>
+
+  <div id="trick">
+    <div class="trick-slot" id="trick-north"></div>
+    <div class="trick-slot" id="trick-west"></div>
+    <div class="trick-slot" id="trick-east"></div>
+    <div class="trick-slot" id="trick-south"></div>
+  </div>
+
+  <div id="hand-south"></div>
+
+  <!-- Bidding overlay -->
+  <div class="overlay" id="bid-overlay">
+    <div class="modal">
+      <h2 id="bid-title">Du bestimmst den Trumpf</h2>
+      <p id="bid-sub">Wähle eine Trumpffarbe – oder schiebe an deinen Partner.</p>
+      <div class="choice-grid" id="bid-choices"></div>
+    </div>
+  </div>
+
+  <!-- Round end overlay -->
+  <div class="overlay" id="round-overlay">
+    <div class="modal">
+      <h2 id="round-title">Rundenergebnis</h2>
+      <p id="round-sub"></p>
+      <button class="bigbtn" id="round-continue">Weiter</button>
+    </div>
+  </div>
+
+  <!-- Match end overlay -->
+  <div class="overlay" id="match-overlay">
+    <div class="modal">
+      <h2 id="match-title">Spiel zu Ende</h2>
+      <p id="match-sub"></p>
+      <button class="bigbtn" id="match-restart">Neues Spiel</button>
+    </div>
+  </div>
+
+  <!-- Help overlay -->
+  <div class="overlay" id="help-overlay">
+    <div class="modal">
+      <h2>So wird gespielt</h2>
+      <div class="rules-body">
+        <h3>Ziel</h3>
+        <p>Du spielst mit Brigitte (oben) gegen Patricia (links) und Bernhard (rechts). Zusammen mit Brigitte versucht ihr, möglichst viele Punkte zu sammeln. Wer zuerst 1000 Punkte erreicht, gewinnt.</p>
+        <h3>Trumpf wählen</h3>
+        <p>Reihum bestimmt jemand den Trumpf: Kreuz, Schaufel, Herz oder Ecke. Wer nicht sicher ist, darf einmal an den Partner schieben – dann muss dieser den Trumpf bestimmen.</p>
+        <h3>Karten ausspielen</h3>
+        <ul>
+          <li>Du musst die angespielte Farbe bedienen, wenn du eine Karte davon hast.</li>
+          <li>Hast du keine Karte dieser Farbe, darfst du eine beliebige Karte spielen, auch Trumpf.</li>
+          <li>Deine spielbaren Karten sind leicht angehoben und golden umrandet.</li>
+        </ul>
+        <h3>Reihenfolge der Karten</h3>
+        <p><b>Trumpffarbe:</b> Bube, 9, Ass, König, Dame, 10, 8, 7, 6 (der Bube ist am stärksten).</p>
+        <p><b>Andere Farben:</b> Ass, König, Dame, Bube, 10, 9, 8, 7, 6.</p>
+        <h3>Punkte</h3>
+        <p>Ass zählt 11, 10 zählt 10, König 4, Dame 3, Bube 2. In der Trumpffarbe zählt der Bube sogar 20 und die 9 zählt 14.</p>
+      </div>
+      <button class="bigbtn" id="help-close">Verstanden</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============== Suit icons (inline SVG paths, drawn not copied) ============== */
+const SUIT_ICONS = {
+  kreuz: '<svg viewBox="0 0 32 32"><path d="M16 3c-2.9 0-5.2 2.3-5.2 5.1 0 1 .3 1.9.8 2.7-.5-.2-1.1-.3-1.7-.3C6.9 10.5 4.5 13 4.5 16s2.4 5.5 5.4 5.5c1.4 0 2.6-.5 3.6-1.4-.6 2.1-1.9 4.6-4 6.9h13c-2.1-2.3-3.4-4.8-4-6.9 1 .9 2.2 1.4 3.6 1.4 3 0 5.4-2.5 5.4-5.5s-2.4-5.5-5.4-5.5c-.6 0-1.2.1-1.7.3.5-.8.8-1.7.8-2.7C21.2 5.3 18.9 3 16 3z"/></svg>',
+  pik: '<svg viewBox="0 0 32 32"><path d="M16 3c3 5.2 9.5 9 9.5 14 0 3.3-2.6 5.8-5.7 5.8-1.4 0-2.6-.5-3.5-1.3.4 2.6 1.6 5 3.7 6.9h-8c2.1-1.9 3.3-4.3 3.7-6.9-.9.8-2.1 1.3-3.5 1.3-3.1 0-5.7-2.5-5.7-5.8 0-5 6.5-8.8 9.5-14z"/></svg>',
+  herz: '<svg viewBox="0 0 32 32"><path d="M16 27C7 20.5 3.5 16.4 3.5 11.8 3.5 7.9 6.6 5 10.4 5c2.3 0 4.4 1.2 5.6 3.1C17.2 6.2 19.3 5 21.6 5c3.8 0 6.9 2.9 6.9 6.8 0 4.6-3.5 8.7-12.5 15.2z"/></svg>',
+  karo: '<svg viewBox="0 0 32 32"><path d="M16 2 27 16 16 30 5 16Z"/></svg>'
+};
+/* Court-card figures (original stylized busts, not copied from any real deck) */
+const COURT_ICONS = {
+  K: '<svg viewBox="0 0 32 32"><path d="M6 29c0-7 4.5-11 10-11s10 4 10 11z"/><circle cx="16" cy="12" r="6.2"/><path d="M13 16.8 Q16 19.6 19 16.8 L17.3 17.4 Q16 18.3 14.7 17.4 Z"/><path d="M7.5 9.5 L10 3 L13.2 7.8 L16 2 L18.8 7.8 L22 3 L24.5 9.5 Q16 6 7.5 9.5Z"/><circle cx="16" cy="1" r="1.3"/><path d="M23 15 L24.6 15 L24.1 27 L23.5 27Z"/><path d="M21.7 16.3 L25.9 16.3 L25.9 17.3 L21.7 17.3Z"/></svg>',
+  O: '<svg viewBox="0 0 32 32"><path d="M6 29c0-7 4.5-11 10-11s10 4 10 11z"/><circle cx="9.3" cy="14" r="2.6"/><circle cx="22.7" cy="14" r="2.6"/><circle cx="16" cy="12" r="6.2"/><path d="M9.5 8.8 Q11 4 13 7.2 Q16 3.3 19 7.2 Q21 4 22.5 8.8 Q16 5.6 9.5 8.8Z"/><path d="M23.3 22.3 L24.3 22.3 L23.2 28 L22.7 28Z"/><circle cx="24.4" cy="20.4" r="1.15"/><circle cx="23.1" cy="19.7" r="0.95"/><circle cx="25.5" cy="19.5" r="0.95"/><circle cx="23.3" cy="21.3" r="0.95"/><circle cx="25.4" cy="21.4" r="0.95"/></svg>',
+  U: '<svg viewBox="0 0 32 32"><path d="M6 29c0-7 4.5-11 10-11s10 4 10 11z"/><circle cx="16" cy="12" r="6.2"/><path d="M8.5 9.2 Q9 3 15 3.2 Q21.5 2.8 23 8 Q19 5.4 15 5.8 Q11 6 8.5 9.2Z"/><path d="M20.5 5 Q24 2 26 -0.3 Q23.6 3.2 21 5.8Z"/></svg>'
+};
+const SUITS = ["kreuz","pik","herz","karo"];
+const SUIT_LABEL = { kreuz:"Kreuz", pik:"Schaufel", herz:"Herz", karo:"Ecke" };
+const SUIT_COLOR = { kreuz:"black", pik:"black", herz:"red", karo:"red" };
+const RANKS = ["6","7","8","9","10","U","O","K","A"];
+const RANK_LABEL = { "6":"6","7":"7","8":"8","9":"9","10":"10","U":"Bube","O":"Dame","K":"König","A":"Ass" };
+const RANK_SHORT = { "6":"6","7":"7","8":"8","9":"9","10":"10","U":"B","O":"D","K":"K","A":"A" };
+function suitIconColored(suit){
+  const color = SUIT_COLOR[suit]==="red" ? "var(--suit-red)" : "var(--suit-black)";
+  return '<span style="color:'+color+';display:inline-flex;">'+SUIT_ICONS[suit]+'</span>';
+}
+
+/* non-trump order low->high index; trump order low->high index */
+const ORDER_NORMAL = ["6","7","8","9","U","O","10","K","A"]; // used for non-trump suits
+const ORDER_TRUMP  = ["6","7","8","10","O","K","A","9","U"]; // trump: U highest, then 9, A,K,O,10,8,7,6 low->high
+
+const POINTS_NORMAL = { "6":0,"7":0,"8":0,"9":0,"10":10,"U":2,"O":3,"K":4,"A":11 };
+const POINTS_TRUMP  = { "6":0,"7":0,"8":0,"9":14,"10":10,"U":20,"O":3,"K":4,"A":11 };
+
+function makeDeck(){
+  const deck = [];
+  for(const s of SUITS) for(const r of RANKS) deck.push({suit:s, rank:r, id:s+"-"+r});
+  return deck;
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+/* ============== Game state ============== */
+const SEATS = ["south","west","north","east"]; // south=human, north=partner
+const TEAM = { south:"us", north:"us", west:"them", east:"them" };
+const NEXT = { south:"west", west:"north", north:"east", east:"south" };
+
+let state = null;
+
+function newMatch(){
+  state = {
+    hands: { south:[], west:[], north:[], east:[] },
+    scores: { us:0, them:0 },
+    dealer: "east", // rotates; chooser = seat after dealer (south chooses first)
+    trump: null,          // suit string, "obenabe", "undenufe"
+    trumpSuit: null,
+    chooser: null,
+    trick: {},             // seat -> card
+    trickLeader: null,
+    turn: null,
+    tricksWon: { us:0, them:0 },
+    roundPoints: { us:0, them:0 },
+    leadSuit: null,
+    tricksPlayed: 0,
+    schiebenUsed: false,
+    matchOver:false,
+  };
+  updateScoreboard();
+  startRound();
+}
+
+function startRound(){
+  const deck = shuffle(makeDeck());
+  state.hands.south = deck.slice(0,9);
+  state.hands.west  = deck.slice(9,18);
+  state.hands.north = deck.slice(18,27);
+  state.hands.east  = deck.slice(27,36);
+  for(const s of SEATS) sortHand(state.hands[s]);
+
+  state.trump = null; state.trumpSuit = null;
+  state.trick = {}; state.trickLeader = null;
+  state.tricksWon = { us:0, them:0 };
+  state.roundPoints = { us:0, them:0 };
+  state.leadSuit = null;
+  state.tricksPlayed = 0;
+  state.schiebenUsed = false;
+
+  state.chooser = NEXT[state.dealer];
+  renderAll();
+  setTrumpLabel("–");
+  showBanner(seatLabel(state.chooser)+" bestimmt den Trumpf");
+  setTimeout(()=>beginBidding(state.chooser), 700);
+}
+
+function sortHand(hand){
+  hand.sort((a,b)=>{
+    if(a.suit!==b.suit) return SUITS.indexOf(a.suit)-SUITS.indexOf(b.suit);
+    return ORDER_NORMAL.indexOf(a.rank)-ORDER_NORMAL.indexOf(b.rank);
+  });
+}
+
+/* ============== Bidding ============== */
+function beginBidding(seat){
+  if(seat==="south"){
+    openBidOverlay(false);
+  } else {
+    // AI bidding
+    setTimeout(()=>{
+      const choice = aiChooseTrump(seat);
+      if(choice==="schieben" && !state.schiebenUsed){
+        state.schiebenUsed = true;
+        const partner = NEXT[NEXT[seat]];
+        showBanner(seatLabel(seat)+" schiebt an "+seatLabel(partner));
+        setTimeout(()=>beginBidding(partner), 900);
+      } else {
+        finalizeTrump(seat, choice);
+      }
+    }, 900);
+  }
+}
+
+function openBidOverlay(isAfterSchieben){
+  const grid = document.getElementById("bid-choices");
+  grid.innerHTML = "";
+  document.getElementById("bid-title").textContent = isAfterSchieben ? "Brigitte hat geschoben" : "Du bestimmst den Trumpf";
+  document.getElementById("bid-sub").textContent = isAfterSchieben ?
+    "Jetzt musst du den Trumpf bestimmen." :
+    "Wähle eine Trumpffarbe – oder schiebe an deinen Partner.";
+  for(const s of SUITS){
+    const b = document.createElement("button");
+    b.className = "choice-btn";
+    b.innerHTML = suitIconColored(s) + "<span>"+SUIT_LABEL[s]+"</span>";
+    b.onclick = ()=>{ closeOverlay("bid-overlay"); finalizeTrump("south", s); };
+    grid.appendChild(b);
+  }
+  if(!isAfterSchieben && !state.schiebenUsed){
+    const sch = document.createElement("button");
+    sch.className = "choice-btn wide"; sch.textContent = "Schieben (an Partner)";
+    sch.onclick = ()=>{
+      closeOverlay("bid-overlay");
+      state.schiebenUsed = true;
+      showBanner("Du schiebst an "+seatLabel("north"));
+      setTimeout(()=>beginBidding("north"), 900);
+    };
+    grid.appendChild(sch);
+  }
+  document.getElementById("bid-overlay").classList.add("show");
+  document.getElementById("hand-south").classList.add("raised");
+}
+
+function aiChooseTrump(seat){
+  const hand = state.hands[seat];
+  const counts = {}; for(const s of SUITS) counts[s]=0;
+  for(const c of hand) counts[c.suit]++;
+  let best = SUITS[0], bestScore=-1;
+  for(const s of SUITS){
+    // score suit by count + presence of U/9/A in that suit
+    let sc = counts[s]*2;
+    if(hand.some(c=>c.suit===s && c.rank==="U")) sc+=4;
+    if(hand.some(c=>c.suit===s && c.rank==="9")) sc+=2;
+    if(hand.some(c=>c.suit===s && c.rank==="A")) sc+=2;
+    if(sc>bestScore){ bestScore=sc; best=s; }
+  }
+  if(bestScore<=5 && !state.schiebenUsed && Math.random()<0.5) return "schieben";
+  return best;
+}
+
+function finalizeTrump(seat, choice){
+  state.chooser = seat;
+  state.trump = "suit"; state.trumpSuit = choice;
+  setTrumpLabel(trumpDisplay());
+  showBanner(seatLabel(seat)+" spielt "+trumpDisplay());
+  state.trickLeader = seat;
+  state.turn = seat;
+  setTimeout(()=>{ renderAll(); playTurnIfAI(); }, 900);
+}
+
+function trumpDisplay(){
+  return SUIT_LABEL[state.trumpSuit];
+}
+function setTrumpLabel(text){
+  const el = document.getElementById("trump-val");
+  const chip = document.getElementById("trumpchip");
+  if(state && state.trump==="suit"){
+    el.innerHTML = suitIconColored(state.trumpSuit) + " "+SUIT_LABEL[state.trumpSuit];
+    chip.innerHTML = suitIconColored(state.trumpSuit);
+    chip.classList.add("showing");
+  } else {
+    el.textContent = text;
+    chip.classList.remove("showing");
+  }
+}
+
+/* ============== Card ranking / legality ============== */
+function cardOrderValue(card){
+  if(card.suit===state.trumpSuit){
+    return 100 + ORDER_TRUMP.indexOf(card.rank);
+  }
+  return ORDER_NORMAL.indexOf(card.rank);
+}
+function cardPoints(card){
+  if(state.trump==="suit" && card.suit===state.trumpSuit) return POINTS_TRUMP[card.rank];
+  return POINTS_NORMAL[card.rank];
+}
+function isTrumpCard(card){
+  return state.trump==="suit" && card.suit===state.trumpSuit;
+}
+function legalCards(seat){
+  const hand = state.hands[seat];
+  if(Object.keys(state.trick).length===0) return hand.slice(); // leading, anything goes
+  const lead = state.leadSuit;
+  const haveLead = hand.filter(c=>c.suit===lead);
+  if(haveLead.length>0) return haveLead;
+  return hand.slice();
+}
+
+/* ============== Turn / trick flow ============== */
+function playCard(seat, card){
+  if(!card) return;
+  if(state.trick[seat]) return; // this seat already played in the current trick (stray/duplicate call)
+  if(state.turn!==seat) return; // not this seat's turn (stray/duplicate call)
+  const hand = state.hands[seat];
+  const idx = hand.findIndex(c=>c.id===card.id);
+  if(idx===-1) return;
+  hand.splice(idx,1);
+  state.trick[seat] = card;
+  if(Object.keys(state.trick).length===1){
+    state.leadSuit = card.suit;
+    state.trickLeader = seat;
+  }
+  renderAll();
+
+  if(Object.keys(state.trick).length===4){
+    state.turn = null;
+    setTimeout(resolveTrick, 1100);
+  } else {
+    state.turn = NEXT[seat];
+    renderAll();
+    setTimeout(playTurnIfAI, 700);
+  }
+}
+
+function playTurnIfAI(){
+  if(state.matchOver) return;
+  const seat = state.turn;
+  if(!seat || state.trick[seat]) return; // trick already resolving or this seat already played
+  if(seat==="south") { renderAll(); return; }
+  const legal = legalCards(seat);
+  const choice = aiPickCard(seat, legal);
+  playCard(seat, choice);
+}
+
+function aiPickCard(seat, legal){
+  const trickCount = Object.keys(state.trick).length;
+  const myTeam = TEAM[seat];
+  // find current winning seat in trick
+  let winSeat=null, winVal=-1;
+  for(const s in state.trick){
+    const c = state.trick[s];
+    let v = -1;
+    if(isTrumpCard(c)) v = 200 + ORDER_TRUMP.indexOf(c.rank);
+    else if(c.suit===state.leadSuit) v = cardOrderValue(c);
+    if(v>winVal){ winVal=v; winSeat=s; }
+  }
+  const partnerWinning = winSeat && TEAM[winSeat]===myTeam;
+
+  // sort legal by "strength to win" descending
+  const canWin = legal.filter(c=>{
+    let v;
+    if(isTrumpCard(c)) v = 200+ORDER_TRUMP.indexOf(c.rank);
+    else if(trickCount===0 || c.suit===state.leadSuit) v = cardOrderValue(c);
+    else v = -1;
+    return trickCount===0 ? true : v>winVal;
+  });
+
+  if(trickCount===0){
+    // lead: play a middling non-trump card, or trump if very strong hand
+    const nonTrump = legal.filter(c=>!isTrumpCard(c));
+    const pool = nonTrump.length? nonTrump : legal;
+    pool.sort((a,b)=>cardPoints(a)-cardPoints(b));
+    return pool[0];
+  }
+  if(partnerWinning){
+    // dump highest point card that still loses, to feed partner
+    const losers = legal.filter(c=>!canWin.includes(c));
+    const pool = losers.length? losers : legal;
+    pool.sort((a,b)=>cardPoints(b)-cardPoints(a));
+    return pool[0];
+  }
+  if(canWin.length>0){
+    // win as cheaply as possible
+    canWin.sort((a,b)=>{
+      const va = isTrumpCard(a)?200+ORDER_TRUMP.indexOf(a.rank):cardOrderValue(a);
+      const vb = isTrumpCard(b)?200+ORDER_TRUMP.indexOf(b.rank):cardOrderValue(b);
+      return va-vb;
+    });
+    return canWin[0];
+  }
+  // can't win: dump lowest point card
+  const pool = legal.slice();
+  pool.sort((a,b)=>cardPoints(a)-cardPoints(b));
+  return pool[0];
+}
+
+function resolveTrick(){
+  if(Object.keys(state.trick).length!==4) return; // stray/duplicate call, trick already resolved
+  let winSeat=null, winVal=-1;
+  for(const s of SEATS){
+    const c = state.trick[s];
+    let v;
+    if(isTrumpCard(c)) v = 200+ORDER_TRUMP.indexOf(c.rank);
+    else if(c.suit===state.leadSuit) v = cardOrderValue(c);
+    else v = -1;
+    if(v>winVal){ winVal=v; winSeat=s; }
+  }
+  let pts = 0;
+  for(const s of SEATS) pts += cardPoints(state.trick[s]);
+  state.tricksPlayed++;
+  const isLast = state.tricksPlayed===9;
+
+  const team = TEAM[winSeat];
+  state.roundPoints[team] += pts;
+  state.tricksWon[team]++;
+
+  showBanner(seatLabel(winSeat)+" gewinnt den Stich (+"+pts+")");
+
+  state.trick = {};
+  state.leadSuit = null;
+  state.turn = winSeat;
+  state.trickLeader = winSeat;
+  renderAll();
+
+  if(isLast){
+    setTimeout(endRound, 1200);
+  } else {
+    setTimeout(playTurnIfAI, 900);
+  }
+}
+
+function endRound(){
+  state.scores.us += state.roundPoints.us;
+  state.scores.them += state.roundPoints.them;
+  updateScoreboard();
+
+  const ov = document.getElementById("round-overlay");
+  document.getElementById("round-title").textContent = "Rundenergebnis";
+  document.getElementById("round-sub").innerHTML =
+    "Trumpf war <b>"+trumpDisplay()+"</b>, bestimmt von "+seatLabel(state.chooser)+".<br><br>"+
+    "Wir: <b>"+state.roundPoints.us+"</b> Punkte &nbsp;&nbsp; Sie: <b>"+state.roundPoints.them+"</b> Punkte<br>"+
+    "Gesamt – Wir: <b>"+state.scores.us+"</b> &nbsp;&nbsp; Sie: <b>"+state.scores.them+"</b>";
+  ov.classList.add("show");
+
+  if(state.scores.us>=1000 || state.scores.them>=1000){
+    state.matchOver = true;
+  }
+}
+
+document.getElementById("round-continue").onclick = function(){
+  closeOverlay("round-overlay");
+  if(state.matchOver){
+    const won = state.scores.us>=1000 && state.scores.us>state.scores.them;
+    document.getElementById("match-title").textContent = won ? "Ihr habt gewonnen! 🎉" : "Verloren – knapp war's!";
+    document.getElementById("match-sub").innerHTML =
+      "Endstand – Wir: <b>"+state.scores.us+"</b> &nbsp;&nbsp; Sie: <b>"+state.scores.them+"</b>";
+    document.getElementById("match-overlay").classList.add("show");
+    return;
+  }
+  state.dealer = NEXT[state.dealer];
+  startRound();
+};
+document.getElementById("match-restart").onclick = function(){
+  closeOverlay("match-overlay");
+  newMatch();
+};
+
+/* ============== Small helpers ============== */
+const SEAT_NAMES = { south:"Du", north:"Brigitte", west:"Patricia", east:"Bernhard" };
+function seatLabel(seat){ return SEAT_NAMES[seat]; }
+
+function closeOverlay(id){
+  document.getElementById(id).classList.remove("show");
+  if(id==="bid-overlay") document.getElementById("hand-south").classList.remove("raised");
+}
+
+let bannerTimer = null;
+function showBanner(text){
+  const el = document.getElementById("banner");
+  el.textContent = text;
+  el.classList.add("show");
+  if(bannerTimer) clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(()=>el.classList.remove("show"), 1700);
+}
+
+function updateScoreboard(){
+  document.getElementById("score-us").textContent = state.scores.us;
+  document.getElementById("score-them").textContent = state.scores.them;
+}
+
+/* ============== Rendering ============== */
+/* Pip positions as % of card width/height, hand-arranged like a real deck */
+const PIP_LAYOUT = {
+  "6":  [[30,16],[70,16],[30,50],[70,50],[30,84],[70,84]],
+  "7":  [[30,16],[70,16],[50,33],[30,50],[70,50],[30,84],[70,84]],
+  "8":  [[30,14],[70,14],[50,31],[30,48],[70,48],[50,65],[30,86],[70,86]],
+  "9":  [[30,12],[70,12],[30,32],[70,32],[50,50],[30,68],[70,68],[30,88],[70,88]],
+  "10": [[30,10],[70,10],[50,21],[30,32],[70,32],[30,68],[70,68],[50,79],[30,90],[70,90]]
+};
+
+const CARD_IMG_SUIT = { kreuz:"club", pik:"spade", herz:"heart", karo:"diamond" };
+const CARD_IMG_COURT = { U:"jack", O:"queen", K:"king" };
+
+function cardHTML(card){
+  const suitClass = SUIT_COLOR[card.suit];
+  const icon = SUIT_ICONS[card.suit];
+  const short = RANK_SHORT[card.rank];
+
+  if(CARD_IMG_COURT[card.rank]){
+    const file = CARD_IMG_SUIT[card.suit]+"_"+CARD_IMG_COURT[card.rank]+".svg";
+    return '<div class="card '+suitClass+' art">'+
+      '<img src="cards/'+file+'" alt="'+RANK_LABEL[card.rank]+' '+SUIT_LABEL[card.suit]+'" draggable="false"/>'+
+      '</div>';
+  }
+
+  let middle;
+  if(PIP_LAYOUT[card.rank]){
+    let pips = "";
+    for(const [x,y] of PIP_LAYOUT[card.rank]){
+      pips += '<div class="pip-icon" style="left:'+x+'%;top:'+y+'%;">'+icon+'</div>';
+    }
+    middle = '<div class="pips">'+pips+'</div>';
+  } else if(card.rank==="A"){
+    middle = '<div class="center-icon big">'+icon+'</div>';
+  } else {
+    middle = '<div class="center-icon court">'+COURT_ICONS[card.rank]+'</div>';
+  }
+
+  return '<div class="card '+suitClass+'">'+
+    '<div class="corner top">'+
+      '<div class="rank">'+short+'</div>'+
+      '<div class="pip">'+icon+'</div>'+
+    '</div>'+
+    middle+
+    '<div class="corner bottom">'+
+      '<div class="rank">'+short+'</div>'+
+      '<div class="pip">'+icon+'</div>'+
+    '</div>'+
+    '</div>';
+}
+
+function renderHandBacks(){
+  for(const seat of ["north","west","east"]){
+    const el = document.getElementById("hand-"+seat);
+    el.innerHTML = "";
+    const n = state.hands[seat].length;
+    for(let i=0;i<n;i++){
+      const d = document.createElement("div");
+      d.className = "mini-card";
+      el.appendChild(d);
+    }
+  }
+}
+
+function renderSouthHand(){
+  const el = document.getElementById("hand-south");
+  el.innerHTML = "";
+  const overlayOpen = document.querySelector(".overlay.show");
+  const canPlay = !overlayOpen && state.turn==="south" && state.trump && Object.keys(state.trick).length<4;
+  const legal = canPlay ? legalCards("south") : [];
+  for(const card of state.hands.south){
+    const d = document.createElement("div");
+    d.className = "pcard";
+    d.innerHTML = cardHTML(card);
+    if(canPlay){
+      const isLegal = legal.some(c=>c.id===card.id);
+      d.classList.add(isLegal ? "legal" : "illegal");
+      if(isLegal){
+        d.tabIndex = 0;
+        d.setAttribute("role","button");
+        d.setAttribute("aria-label", RANK_LABEL[card.rank]+" "+SUIT_LABEL[card.suit]+" spielen");
+        d.onclick = ()=>playCard("south", card);
+        d.onkeydown = (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); playCard("south", card); } };
+      }
+    }
+    el.appendChild(d);
+  }
+}
+
+function renderTrick(){
+  for(const seat of SEATS){
+    const slot = document.getElementById("trick-"+seat);
+    const card = state.trick[seat];
+    slot.innerHTML = card ? cardHTML(card) : "";
+  }
+}
+
+function renderSeatActive(){
+  for(const seat of SEATS){
+    document.getElementById("label-"+seat).classList.remove("active");
+  }
+  const highlight = state.trump ? state.turn : state.chooser;
+  if(highlight) document.getElementById("label-"+highlight).classList.add("active");
+}
+
+function renderAll(){
+  renderHandBacks();
+  renderSouthHand();
+  renderTrick();
+  renderSeatActive();
+}
+
+/* ============== Help + init ============== */
+document.getElementById("helpbtn").onclick = function(){
+  document.getElementById("help-overlay").classList.add("show");
+};
+document.getElementById("help-close").onclick = function(){
+  closeOverlay("help-overlay");
+};
+
+newMatch();
+
+})();
+</script>
