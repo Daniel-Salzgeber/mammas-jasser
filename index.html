@@ -122,6 +122,8 @@
     letter-spacing:.03em; z-index:15; white-space:nowrap;
   }
   .seat-label.active{ background:var(--brass); color:#2a1c10; box-shadow:0 0 14px var(--brass); }
+  .chooser-icon{ display:inline-flex; width:0.85em; height:0.85em; vertical-align:-0.12em; margin-left:0.35em; }
+  .chooser-icon svg{ width:100%; height:100%; display:block; }
   #label-north{ top:96px; left:50%; transform:translateX(-50%); }
   #label-west{ top:50%; left:70px; transform:translateY(-50%); }
   #label-east{ top:50%; right:70px; transform:translateY(-50%); }
@@ -604,6 +606,7 @@ function startRound(){
 
   state.chooser = NEXT[state.dealer];
   state.originalChooser = state.chooser;
+  renderChooserMark();
   renderAll();
   setTrumpLabel("–");
   showBanner(seatLabel(state.chooser)+" bestimmt den Trumpf");
@@ -692,6 +695,7 @@ function finalizeTrump(seat, choice){
   for(const s of SEATS) sortHand(state.hands[s], state.trumpSuit);
   setTrumpLabel(trumpDisplay());
   showBanner(seatLabel(seat)+" spielt "+trumpDisplay());
+  renderChooserMark();
   state.trickLeader = state.originalChooser;
   state.turn = state.originalChooser;
   setTimeout(()=>{ renderAll(); playTurnIfAI(); }, 900);
@@ -917,11 +921,21 @@ try{
   if(savedNames) SEAT_NAMES = Object.assign({}, DEFAULT_SEAT_NAMES, savedNames);
 }catch(e){}
 function seatLabel(seat){ return SEAT_NAMES[seat]; }
-function applySeatNamesToDOM(){
-  document.getElementById("label-north").textContent = SEAT_NAMES.north;
-  document.getElementById("label-west").textContent = SEAT_NAMES.west;
-  document.getElementById("label-east").textContent = SEAT_NAMES.east;
+function renderChooserMark(){
+  for(const seat of ["north","west","east"]){
+    const el = document.getElementById("label-"+seat);
+    const showIcon = state && state.trump==="suit" && state.chooser===seat;
+    el.textContent = SEAT_NAMES[seat];
+    if(showIcon){
+      const icon = document.createElement("span");
+      icon.className = "chooser-icon";
+      icon.title = "hat den Trumpf bestimmt";
+      icon.innerHTML = SUIT_ICONS[state.trumpSuit];
+      el.appendChild(icon);
+    }
+  }
 }
+function applySeatNamesToDOM(){ renderChooserMark(); }
 applySeatNamesToDOM();
 
 function saveSeatNames(){
