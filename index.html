@@ -124,7 +124,7 @@
   #label-north{ top:96px; left:50%; transform:translateX(-50%); }
   #label-west{ top:50%; left:70px; transform:translateY(-50%); }
   #label-east{ top:50%; right:70px; transform:translateY(-50%); }
-  #label-south{ bottom:170px; left:50%; transform:translateX(-50%); z-index:35; }
+  #label-south{ display:none; }
 
   .hand-back{ position:absolute; display:flex; z-index:10; }
   .mini-card{
@@ -283,7 +283,6 @@
 
   /* ---------- Medium-height wide screens (tablet landscape, laptop windows) ---------- */
   @media (min-width: 641px) and (max-height: 860px){
-    #label-south{ bottom:158px; }
     #bid-overlay{ bottom:187px; }
     .card, .trick-slot{ width:120px; height:170px; }
     .card .corner .rank{ font-size:26px; }
@@ -321,7 +320,6 @@
     #wordmark{ font-size:10px; top:76px; }
     #hand-north{ top:92px; }
     #label-north{ top:130px; }
-    #label-south{ bottom:222px; }
     #hand-south{ bottom:8px; height:178px; }
     .card, .trick-slot{ width:94px; height:132px; }
     .card .corner .rank{ font-size:19px; }
@@ -359,7 +357,6 @@
     #trick{ width:236px; height:206px; }
     #trick-north, #trick-south{ margin-left:-38px; }
     #trick-west, #trick-east{ margin-top:-53px; }
-    #label-south{ bottom:174px; }
     #hand-south{ height:158px; }
     #bid-overlay{ bottom:154px; }
     #trumpchip{ margin-top:-113px; margin-left:-103px; width:44px; height:44px; }
@@ -392,7 +389,6 @@
     #trick{ width:126px; height:92px; }
     #trick-north, #trick-south{ margin-left:-22px; }
     #trick-west, #trick-east{ margin-top:-31px; }
-    #label-south{ bottom:105px; }
     #hand-south{ bottom:6px; height:98px; }
     .pcard{ width:62px; height:89px; margin-left:-42px; }
     .pcard .card{ width:62px; height:89px; }
