@@ -989,7 +989,7 @@ function renderSouthHand(){
   el.innerHTML = "";
   const overlayOpen = document.querySelector(".overlay.show");
   const canPlay = !overlayOpen && state.turn==="south" && state.trump && Object.keys(state.trick).length<4;
-  const legal = canPlay ? legalCards("south") : [];
+  const legal = canPlay ? state.hands.south.slice() : [];
   for(const card of state.hands.south){
     const d = document.createElement("div");
     d.className = "pcard";
