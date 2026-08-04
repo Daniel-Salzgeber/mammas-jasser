@@ -571,6 +571,7 @@ function newMatch(){
     trump: null,          // suit string, "obenabe", "undenufe"
     trumpSuit: null,
     chooser: null,
+    originalChooser: null, // the "Vorhand" seat that always leads the first trick, even after schieben
     trick: {},             // seat -> card
     trickLeader: null,
     turn: null,
@@ -602,6 +603,7 @@ function startRound(){
   state.schiebenUsed = false;
 
   state.chooser = NEXT[state.dealer];
+  state.originalChooser = state.chooser;
   renderAll();
   setTrumpLabel("–");
   showBanner(seatLabel(state.chooser)+" bestimmt den Trumpf");
@@ -627,6 +629,8 @@ function beginBidding(seat){
       if(choice==="schieben" && !state.schiebenUsed){
         state.schiebenUsed = true;
         const partner = NEXT[NEXT[seat]];
+        state.chooser = partner;
+        renderSeatActive();
         showBanner(seatLabel(seat)+" schiebt an "+seatLabel(partner));
         setTimeout(()=>beginBidding(partner), 900);
       } else {
@@ -639,7 +643,7 @@ function beginBidding(seat){
 function openBidOverlay(isAfterSchieben){
   const grid = document.getElementById("bid-choices");
   grid.innerHTML = "";
-  document.getElementById("bid-title").textContent = isAfterSchieben ? "Brigitte hat geschoben" : "Du bestimmst den Trumpf";
+  document.getElementById("bid-title").textContent = isAfterSchieben ? (seatLabel("north")+" hat geschoben") : "Du bestimmst den Trumpf";
   document.getElementById("bid-sub").textContent = isAfterSchieben ?
     "Jetzt musst du den Trumpf bestimmen." :
     "Wähle eine Trumpffarbe – oder schiebe an deinen Partner.";
@@ -688,8 +692,8 @@ function finalizeTrump(seat, choice){
   for(const s of SEATS) sortHand(state.hands[s], state.trumpSuit);
   setTrumpLabel(trumpDisplay());
   showBanner(seatLabel(seat)+" spielt "+trumpDisplay());
-  state.trickLeader = seat;
-  state.turn = seat;
+  state.trickLeader = state.originalChooser;
+  state.turn = state.originalChooser;
   setTimeout(()=>{ renderAll(); playTurnIfAI(); }, 900);
 }
 
